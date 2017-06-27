@@ -9,6 +9,7 @@ import Queue
 import time
 import json
 import os
+from json2html import json2html
 from tqdm import tqdm
 
 import threading
@@ -19,7 +20,7 @@ def safe_print(content):
     print "{0}\n".format(content),
 
 
-def get_area_for_calculation(image_width, image_height, ircut_moving_direction,
+def get_area_for_calculation(image_width, image_height, ircut_direction,
                              padding_percent=0.05, area_thickness=0.2):
     ''' returns 2 x (x, y, w, h) for area calautaion '''
     up_padding_percent = padding_percent
@@ -27,7 +28,7 @@ def get_area_for_calculation(image_width, image_height, ircut_moving_direction,
     left_padding_A = left_padding
     up_padding_A = image_width * up_padding_percent
 
-    if ircut_moving_direction is 'vertical':
+    if ircut_direction is 'vertical':
         area_width = image_width * (1 - padding_percent * 2)
         area_height = image_height * area_thickness
 
@@ -39,7 +40,7 @@ def get_area_for_calculation(image_width, image_height, ircut_moving_direction,
         area_width_B = area_width
         area_height_B = area_height
 
-    elif ircut_moving_direction is 'horizontal':
+    elif ircut_direction is 'horizontal':
         area_width = image_width * area_thickness
         area_height = image_height * (1 - padding_percent * 2)
 
@@ -77,7 +78,6 @@ class PixelCounter(object):
         row_span = 16
         col_span = 16
 
-
         area = self.areas[0]
         x, y, w, h = area[0], area[1], area[2], area[3]
 
@@ -85,7 +85,6 @@ class PixelCounter(object):
             for col in xrange(x, x+w, col_span):
                 areaA_total = areaA_total + self.imagearray[row][col]
         areaA_average = areaA_total / ((w / col_span) * (h / row_span))
-
 
         area = self.areas[1]
         x, y, w, h = area[0], area[1], area[2], area[3]
@@ -117,38 +116,40 @@ def compute_batch(tid, jpegs, queue):
         image = Image.open(jpeg)
         image_width, image_height = image.size
         area = get_area_for_calculation(image_width, image_height,
-                                        ircut_moving_direction)
+                                        ircut_direction)
         pc = PixelCounter(image, area)
-        diff = pc.brightnessDifference()
-        result = {'jpeg': "file://{}/".format(os.getcwd()) + jpeg, 'diff': diff}
+        score = pc.brightnessDifference()
+        jpeg_url = "<a href='{}'>{}</a>".format(jpeg, jpeg)
+        result = {'jpeg': jpeg_url, 'score': str(score)}
         queue.put(result)
-
-#         output = "file: {}, diff: {}".format(jpeg, diff)
-#         safe_print(output)
 
 
 def serialize(result, filename):
-    json.dump(result, file(filename, "w"), indent=4, separators=(',', ': '))
+    sorted_result = sorted(result, key=lambda x: int(x['score']), reverse=True)
+    f = open("output.html", "w")
+    f.write(json2html.convert(sorted_result))
+    f.close()
 
 
 def parse_argument():
     parser = argparse.ArgumentParser(description="NightOwl - IRCut stuck detect")
-    parser.add_argument("-f", "--folder", help="JPEGs folder",
+    parser.add_argument("-f", "--folder", help="JPEGs folder, default is 'jpeg'",
                         type=str, default="jpeg")
     parser.add_argument("-d", "--direction", type=str,
                         help="IRCut moving direction. 'v' for vertical, 'h' for horizontal",
                         choices=["v", "h"], default='h')
     parser.add_argument("-o", "--output", type=str,
-                        help="Output file", default="output.json")
+                        help="Output HTML", default="output.html")
     parser.add_argument("-t", "--threads", type=int,
-                        help="Number of threads for processing. 0 for auto",
+                        help="Number of processing threads. 0(auto)",
                         choices=range(0, 9), default=0)
     return parser
 
 
 def initialize():
     filelist = []
-    path = os.path.abspath("./" + folder)
+#     path = os.path.abspath("./" + folder)
+    path = "./" + folder
     if os.path.isdir(path) is not True:
         print "Folder '{}' doesn't exist".format(folder)
         sys.exit(1)
@@ -178,14 +179,8 @@ if __name__ == '__main__':
     parser = parse_argument()
     args = parser.parse_args()
     folder = args.folder
-    ircut_moving_direction = 'horizontal' if args.direction is 'h' else 'vertical'
+    ircut_direction = 'horizontal' if args.direction is 'h' else 'vertical'
     outputfile = args.output
-    if os.path.isfile(outputfile) is True:
-        sys.stdout.write("{} exists, do you wanna continue? (y/N) ".format(outputfile))
-        sys.stdout.flush()
-        ans = raw_input().lower()
-        if ans not in ("yes", "y", "yep", "ok", "sure"):
-            sys.exit(1)
 
     if args.threads == 0:
         cpus = multiprocessing.cpu_count()
