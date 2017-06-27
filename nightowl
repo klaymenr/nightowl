@@ -6,7 +6,6 @@ import sys
 import argparse
 import Queue
 import time
-import os
 from json2html import json2html
 from tqdm import tqdm
 
@@ -131,8 +130,8 @@ def serialize(result, filename):
 
 def parse_argument():
     parser = argparse.ArgumentParser(description="NightOwl - IRCut stuck detect")
-    parser.add_argument("-f", "--folder", help="JPEGs folder, default is 'jpeg'",
-                        type=str, default="jpeg")
+    parser.add_argument("folder", help="JPEGs folder", metavar="Folder", nargs='?',
+                        type=str, default='jpeg')
     parser.add_argument("-d", "--direction", type=str,
                         help="IRCut moving direction. 'v' for vertical, 'h' for horizontal",
                         choices=["v", "h"], default='h')
