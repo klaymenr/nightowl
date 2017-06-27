@@ -3,11 +3,9 @@
 from PIL import Image
 import numpy
 import sys
-import os
 import argparse
 import Queue
 import time
-import json
 import os
 from json2html import json2html
 from tqdm import tqdm
@@ -212,6 +210,7 @@ if __name__ == '__main__':
                 while not queue.empty():
                     subprocessed.append(queue.get())
                 processed += subprocessed
+                bar.update(len(subprocessed))
                 break
 
     except KeyboardInterrupt:
