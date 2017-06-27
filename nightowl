@@ -2,7 +2,6 @@
 
 from PIL import Image
 import numpy
-import cv2
 import sys
 import os
 import argparse
@@ -27,6 +26,7 @@ def get_area_for_calculation(image_width, image_height, ircut_moving_direction,
     left_padding = image_width * padding_percent
     left_padding_A = left_padding
     up_padding_A = image_width * up_padding_percent
+
     if ircut_moving_direction is 'vertical':
         area_width = image_width * (1 - padding_percent * 2)
         area_height = image_height * area_thickness
@@ -67,8 +67,7 @@ class PixelCounter(object):
     ''' loop through each pixel and average rgb '''
     def __init__(self, image, areas):
         self.image = image
-        self.opencvImage = cv2.cvtColor(numpy.array(self.image),
-                                        cv2.COLOR_RGB2GRAY)
+        self.imagearray = numpy.asarray(self.image.convert('L'))
 
         self.areas = areas
 
@@ -78,21 +77,22 @@ class PixelCounter(object):
         row_span = 16
         col_span = 16
 
+
         area = self.areas[0]
         x, y, w, h = area[0], area[1], area[2], area[3]
 
         for row in xrange(y, y+h, row_span):
             for col in xrange(x, x+w, col_span):
-                areaA_total = areaA_total + self.opencvImage[row][col]
+                areaA_total = areaA_total + self.imagearray[row][col]
+        areaA_average = areaA_total / ((w / col_span) * (h / row_span))
+
 
         area = self.areas[1]
         x, y, w, h = area[0], area[1], area[2], area[3]
 
         for row in xrange(y, y+h, row_span):
             for col in xrange(x, x+w, col_span):
-                areaB_total = areaB_total + self.opencvImage[row][col]
-
-        areaA_average = areaA_total / ((w / col_span) * (h / row_span))
+                areaB_total = areaB_total + self.imagearray[row][col]
         areaB_average = areaB_total / ((w / col_span) * (h / row_span))
 
         return (abs(areaA_average - areaB_average))
@@ -133,11 +133,18 @@ def serialize(result, filename):
 
 def parse_argument():
     parser = argparse.ArgumentParser(description="NightOwl - IRCut stuck detect")
-    parser.add_argument("-f", "--folder", help="JPEGs folder", type=str, default="jpeg")
-    parser.add_argument("-d", "--direction", type=str, help="IRCut moving direction. 'v' for vertical, 'h' for horizontal", choices=["v", "h"], default='h')
-    parser.add_argument("-o", "--output", type=str, help="Output file", default="output.json")
-    parser.add_argument("-t", "--threads", type=int, help="Number of threads for processing. 0 for auto", choices=range(0, 9), default=0)
+    parser.add_argument("-f", "--folder", help="JPEGs folder",
+                        type=str, default="jpeg")
+    parser.add_argument("-d", "--direction", type=str,
+                        help="IRCut moving direction. 'v' for vertical, 'h' for horizontal",
+                        choices=["v", "h"], default='h')
+    parser.add_argument("-o", "--output", type=str,
+                        help="Output file", default="output.json")
+    parser.add_argument("-t", "--threads", type=int,
+                        help="Number of threads for processing. 0 for auto",
+                        choices=range(0, 9), default=0)
     return parser
+
 
 def initialize():
     filelist = []
@@ -173,7 +180,7 @@ if __name__ == '__main__':
         sys.stdout.write("{} exists, do you wanna continue? (y/N) ".format(outputfile))
         sys.stdout.flush()
         ans = raw_input().lower()
-        if not ans in ("yes", "y", "yep", "ok", "sure"):
+        if ans not in ("yes", "y", "yep", "ok", "sure"):
             sys.exit(1)
 
     if args.threads == 0:
@@ -207,7 +214,6 @@ if __name__ == '__main__':
                     subprocessed.append(queue.get())
                 processed += subprocessed
                 break
-
 
     except KeyboardInterrupt:
         serialize(processed, outputfile)
