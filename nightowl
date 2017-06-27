@@ -126,7 +126,7 @@ def compute_batch(tid, jpegs, queue):
 
 def serialize(result, filename):
     sorted_result = sorted(result, key=lambda x: int(x['score']), reverse=True)
-    f = open("output.html", "w")
+    f = open(filename, "w")
     f.write(json2html.convert(sorted_result))
     f.close()
 
@@ -139,7 +139,7 @@ def parse_argument():
                         help="IRCut moving direction. 'v' for vertical, 'h' for horizontal",
                         choices=["v", "h"], default='h')
     parser.add_argument("-o", "--output", type=str,
-                        help="Output HTML", default="output.html")
+                        help="Output HTML. Default 'output.html'", default="output.html")
     parser.add_argument("-t", "--threads", type=int,
                         help="Number of processing threads. 0(auto)",
                         choices=range(0, 9), default=0)
