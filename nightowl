@@ -149,6 +149,10 @@ def parse_argument():
 def initialize():
     filelist = []
     path = os.path.abspath("./" + folder)
+    if os.path.isdir(path) is not True:
+        print "Folder '{}' doesn't exist".format(folder)
+        sys.exit(1)
+
     for filename in os.listdir(folder):
         if filename.endswith(".jpeg") or filename.endswith(".jpg"):
             filelist.append(path + "/" + filename)
