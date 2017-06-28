@@ -6,6 +6,7 @@ import sys
 import argparse
 import Queue
 import time
+import os
 from json2html import json2html
 from tqdm import tqdm
 
@@ -147,9 +148,12 @@ def initialize():
         print "Folder '{}' doesn't exist".format(folder)
         sys.exit(1)
 
-    for filename in os.listdir(folder):
-        if filename.endswith(".jpeg") or filename.endswith(".jpg"):
-            filelist.append(path + "/" + filename)
+    for root, subdirs, files in os.walk(folder):
+        if len(files) == 0:
+            continue
+        for filename in files:
+            if filename.endswith(".jpeg") or filename.endswith(".jpg"):
+                filelist.append(root + "/" + filename)
 
     threads = []
     num_files = len(filelist)
