@@ -13,10 +13,6 @@ import threading
 import multiprocessing
 
 
-def safe_print(content):
-    print "{0}\n".format(content),
-
-
 def get_area_for_calculation(image_width, image_height, ircut_direction,
                              padding_percent=0.05, area_thickness=0.2):
     ''' returns 2 x (x, y, w, h) for area calautaion '''
