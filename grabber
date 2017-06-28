@@ -32,14 +32,13 @@ class Camera ():
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh.connect(self.__ip, username=self.__username, password=self.__password)
         self.__ssh = ssh
-        self.manual_daynight()
 
     def manual_daynight(self):
-        manual_irled = '/bin/ubnt_ipc_cli -T="ubnt_ispserver" -m="{\\\"functionName\\\":\\\"ChangeIspSettings\\\",\\\"irLedMode\\\":\\\"manual\\\",\\\"irLedLevel\\\":215}"'
+        manual_irled = "/bin/ubnt_ipc_cli -T='ubnt_ispserver' -m='{\"functionName\":\"ChangeIspSettings\",\"irLedMode\":\"manual\" \"irLedLevel\": 215}'"
         self.ssh_command(manual_irled)
 
     def auto_daynight(self):
-        auto_irled = '/bin/ubnt_ipc_cli -T="ubnt_ispserver" -m="{\\\"functionName\\\":\\\"ChangeIspSettings\\\",\\\"irLedMode\\\":\\\"auto\\\",\\\"irLedLevel\\\":215}"'
+        auto_irled = "/bin/ubnt_ipc_cli -T='ubnt_ispserver' -m='{\"functionName\":\"ChangeIspSettings\",\"irLedMode\":\"auto\"}'"
         self.ssh_command(auto_irled)
 
     def ssh_command(self, command):
@@ -48,12 +47,6 @@ class Camera ():
         exit_status = stdout_ssh.channel.recv_exit_status()
         if exit_status != 0:
             print('exit_status {}, command {}'.format(exit_status, command))
-
-#         print "stdin {}, stdout {}, stderr {}".format(stdin_ssh, stdout_ssh, stderr_ssh)
-
-    def __exit__(self):
-        self.auto_daynight()
-        self.__ssh.close()
 
     def systemcfg_write(self, stuff):
         for name, value in stuff.iteritems():
@@ -95,6 +88,8 @@ if __name__ == '__main__':
 
     cam = Camera(creds)
 
+    # setup enviroment
+    cam.manual_daynight()
     cam.anon_snapshot(enable=True)
 
     modes = ['night', 'day']
@@ -108,8 +103,8 @@ if __name__ == '__main__':
             dirname = "{outputdir}/{year}-{month}-{day}/".format(
                 outputdir=args.outputdir, year=now.year,
                 month=now.month, day=now.day)
-            filename = "{hour}-{min}-{second}.jpg".format(
-                hour=now.hour, min=now.minute, second=now.second)
+            filename = "{hour}-{min}-{second}-{mode}.jpg".format(
+                hour=now.hour, min=now.minute, second=now.second, mode=mode)
 
             if now_dir != dirname:
                 if not os.path.exists(dirname):
@@ -119,3 +114,5 @@ if __name__ == '__main__':
             image = cam.snapshot()
             image.save(dirname + "/" + filename)
             time.sleep(1)
+
+    cam.auto_daynight()
