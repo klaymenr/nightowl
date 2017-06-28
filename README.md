@@ -1,8 +1,8 @@
-# IR Cut validate program
+# NightOwl - IR Cut validate program
 
-This repo contains 2 applications, `nightowl` and `grabber. 
+This repo contains 2 applications, `scanner` and `grabber. 
 
-## nightowl
+## scanner
 Program analyzing JPEGs to find out ircut filter stucked images
 
 ## grabber
