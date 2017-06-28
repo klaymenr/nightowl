@@ -148,7 +148,7 @@ def initialize():
         print "Folder '{}' doesn't exist".format(folder)
         sys.exit(1)
 
-    for root, subdirs, files in os.walk(folder):
+    for root, _, files in os.walk(folder):
         if len(files) == 0:
             continue
         for filename in files:
