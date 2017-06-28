@@ -127,7 +127,7 @@ def serialize(result, filename):
 def parse_argument():
     parser = argparse.ArgumentParser(description="NightOwl - IRCut stuck detect")
     parser.add_argument("folder", help="JPEGs folder", metavar="Folder", nargs='?',
-                        type=str, default='jpeg')
+                        type=str, default='grabbed_images')
     parser.add_argument("-d", "--direction", type=str,
                         help="IRCut moving direction. 'v' for vertical, 'h' for horizontal",
                         choices=["v", "h"], default='h')
