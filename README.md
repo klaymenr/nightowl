@@ -1,44 +1,57 @@
 # NightOwl - IR Cut validate program
 
-This repo contains 2 applications, `scanner` and `grabber. 
-
-## scanner
-Program analyzing JPEGs to find out ircut filter stucked images
-
-### usage
-
-Run `scanner` will recursively search files ends with `.jpeg` or `.jpg`,
-calculate score of ircut stuck of an image and output into `output.html`.  The
-content of `output.html` is sorted by `score`, you could check from file which
-has highest score.
-
-In theory, ircut moving direction should be horizontal, which can reduce
-fraction on moving since the ircut doesn't affected by gravity.  However some
-devices do moving their ircut in vertical direction, which `scanner` needs to
-know when computing `score` of an iamge, so `scanner` provides `-d` to specify
-ircut moving direction. If your device
-
+This repo contains 2 applications, `grabber` and `scanner`.  These are off-line
+test tools, which means we need to do ircut filter testing for an amount of
+time, then we can do image analyzing. Testing/Analyzing process is separated.
 
 ## grabber
-Program for downloading JPEGs from camera and alterantes IRCut status
+Downloading JPEGs from camera and alteranting IRCut filter
 
 ### usage
-Just run `grabber` with IP provided will start testing IRcut, default iteration
-is 5000, which means the testing device will switch day/night for 5000 times. A
-`day -> night -> day` counted as 1 switch.
 
+Run `grabber` to start testing IRcut. If nothing given, it will use default
+settings to test.  Configs could be given by CLI or config file.  If there is a
+config file called `grabber.ini` exists in the same folder, `grabber` will use
+it as parameter, and ignore all CLI parameters.  Refer `grabber.ini` for config
+sample. So if `grabber.ini` is prepared, the user just need to double-click
+program icon to start grabbing/testing camera.
+
+Once `grabber` started, it will do continusly ircut filter switching and
+snapshot downloading for specified iterations.  A transition of `day -> night
+-> day` is considered as an iteration.
+
+
+#### CLI usage
+
+Tell `grabber` to test camera ircut at <ip>, images will be written to
+`grabbed_images`.
 ```
 grabber <ip> 
 ```
 
-You can change iteration by `-i <iteration>`, say we'd like to test for `500` times
+Tell `grabber` to test camera ircut for `500` iterations at <ip>, images will
+be written to `grabbed_images`.
 ```
 grabber <ip> -i 500
 ```
 
-Images downloaded will be put to `grabbed_images` by default, which could be
-changed by providing `-o` when running `grabber`, like: 
+Tell `grabber` to test camera ircut for `500` iterations at <ip>, images will
+be written to `<what_ever_you_like>`.
 ```
 grabber <ip> -o <what_ever_you_like>
 ```
+
+## scanner
+Analyzing JPEGs to find out possible ircut filter stucked images.
+
+### usage
+
+`scanner` will recursively search files ends with `.jpeg` or `.jpg`, calculate
+score of ircut stuck of an image and output into `output.html`.  Default
+searching folder is `grabbed_images`.  The content of `output.html` is sorted
+by `score`, you could check from file which has highest score.
+
+By default, `scanner` will computing score by assuming ircut filter moving in
+horizontal direction.  However some devices have vertical moving ircut filter.
+In this case, you could provide `-d` to specify ircut moving direction.
 

@@ -87,12 +87,14 @@ if __name__ == '__main__':
         configs['username'] = config_parser.get('camera', 'username')
         configs['password'] = config_parser.get('camera', 'password')
         configs['iteritems'] = config_parser.get('test', 'iterations')
+        configs['output'] = config_parser.get('test', 'output')
 
     cliargs = {}
     cliargs['ip'] = args.IP
     cliargs['username'] = args.username
     cliargs['password'] = args.password
     cliargs['iterations'] = args.iterations
+    cliargs['outputdir'] = args.outputdir
 
     final_config = configs if configs else cliargs
 
@@ -102,6 +104,7 @@ if __name__ == '__main__':
     creds['username'] = final_config['username']
     creds['password'] = final_config['password']
     iterations = final_config['iterations']
+    outputdir = final_config['outputdir']
 
     cam = Camera(creds)
 
@@ -118,7 +121,7 @@ if __name__ == '__main__':
 
             now = datetime.datetime.now()
             dirname = "{outputdir}/{year}-{month}-{day}/".format(
-                outputdir=args.outputdir, year=now.year,
+                outputdir=outputdir, year=now.year,
                 month=now.month, day=now.day)
             filename = "{hour}-{min}-{second}-{mode}.jpg".format(
                 hour=now.hour, min=now.minute, second=now.second, mode=mode)
