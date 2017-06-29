@@ -1,0 +1,13 @@
+#!/bin/sh
+
+# this script works for linux/mac
+
+[ -z $1 ] && echo "Need platform. $0 <linux/mac>"
+PLAT=$1
+
+
+APPS="grabber scanner"
+for app in $APPS; do
+	pyinstaller -F ../$app
+	cp -a dist/$app $PLAT
+done
