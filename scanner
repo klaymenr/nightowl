@@ -142,7 +142,6 @@ def parse_argument():
 
 def initialize():
     filelist = []
-#     path = os.path.abspath("./" + folder)
     path = "./" + folder
     if os.path.isdir(path) is not True:
         print "Folder '{}' doesn't exist".format(folder)
