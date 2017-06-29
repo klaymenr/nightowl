@@ -7,13 +7,13 @@ import urllib
 import os
 import datetime
 import time
+import ConfigParser
 from PIL import Image
 
 
 def parse_argument():
     parser = argparse.ArgumentParser(description="Grabber - Download snapshots with IR switching")
-    parser.add_argument("IP", help="Remote IP", metavar='IP', nargs="?",
-                        type=str)
+    parser.add_argument("IP", help="Remote IP", type=str, metavar="IP", nargs="?", default='192.168.1.20')
     parser.add_argument("-u", "--username", help="Username", type=str, default='ubnt')
     parser.add_argument("-p", "--password", help="Password", type=str, default='ubnt')
     parser.add_argument("-i", "--iterations", help="iterations to run", type=int, default=5000)
@@ -72,19 +72,36 @@ class Camera ():
         self.ssh_command(command)
 
 
+
 if __name__ == '__main__':
 
     parser = parse_argument()
     args = parser.parse_args()
-    remote_ip = args.IP
-    username = args.username
-    password = args.password
-    iterations = args.iterations
 
+    config_file = 'grabber.ini'
+    configs = {}
+    if os.path.isfile(config_file):
+        config_parser = ConfigParser.ConfigParser()
+        config_parser.read(config_file)
+        configs['ip'] = config_parser.get('camera', 'ip')
+        configs['username'] = config_parser.get('camera', 'username')
+        configs['password'] = config_parser.get('camera', 'password')
+        configs['iteritems'] = config_parser.get('test', 'iterations')
+
+    cliargs = {}
+    cliargs['ip'] = args.IP
+    cliargs['username'] = args.username
+    cliargs['password'] = args.password
+    cliargs['iterations'] = args.iterations
+
+    final_config = configs if configs else cliargs
+
+    # final stuff
     creds = {}
-    creds['ip'] = remote_ip
-    creds['username'] = username
-    creds['password'] = password
+    creds['ip'] = final_config['ip']
+    creds['username'] = final_config['username']
+    creds['password'] = final_config['password']
+    iterations = final_config['iterations']
 
     cam = Camera(creds)
 
