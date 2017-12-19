@@ -1,102 +1,15 @@
 #!/usr/bin/env python
 
-import argparse
-import paramiko
-import cStringIO
-import urllib
 import os
 import datetime
 import time
-import ConfigParser
-from PIL import Image
-
-
-def parse_argument():
-    parser = argparse.ArgumentParser(description="Grabber - Download snapshots with IR switching")
-    parser.add_argument("IP", help="Remote IP", type=str, metavar="IP", nargs="?", default='192.168.1.20')
-    parser.add_argument("-u", "--username", help="Username", type=str, default='ubnt')
-    parser.add_argument("-p", "--password", help="Password", type=str, default='ubnt')
-    parser.add_argument("-i", "--iterations", help="iterations to run", type=int, default=5000)
-    parser.add_argument('-o', "--outputdir", help="Folder to store snapshots", type=str, default='grabbed_images')
-
-    return parser
-
-
-class Camera ():
-    def __init__(self, creds):
-        self.__ip = creds['ip']
-        self.__username = creds['username']
-        self.__password = creds['password']
-
-        ssh = paramiko.SSHClient()
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect(self.__ip, username=self.__username, password=self.__password)
-        self.__ssh = ssh
-
-    def manual_daynight(self):
-        manual_irled = "/bin/ubnt_ipc_cli -T='ubnt_ispserver' -m='{\"functionName\":\"ChangeIspSettings\",\"irLedMode\":\"manual\" \"irLedLevel\": 215}'"
-        self.ssh_command(manual_irled)
-
-    def auto_daynight(self):
-        auto_irled = "/bin/ubnt_ipc_cli -T='ubnt_ispserver' -m='{\"functionName\":\"ChangeIspSettings\",\"irLedMode\":\"auto\"}'"
-        self.ssh_command(auto_irled)
-
-    def ssh_command(self, command):
-        ssh = self.__ssh
-        stdin_ssh, stdout_ssh, stderr_ssh = ssh.exec_command(command)
-        exit_status = stdout_ssh.channel.recv_exit_status()
-        if exit_status != 0:
-            print('exit_status {}, command {}'.format(exit_status, command))
-
-    def systemcfg_write(self, stuff):
-        for name, value in stuff.iteritems():
-            command = "/usr/bin/ubnt_system_cfg write {} {}".format(name, value)
-            self.ssh_command(command)
-
-    def anon_snapshot(self, enable):
-        stuff = {}
-        stuff['httpd.anonSnapshot'] = 1 if enable is True else 0
-        self.systemcfg_write(stuff)
-
-    def snapshot(self):
-        ip = self.__ip
-        url = "http://" + ip + "/snap.jpeg"
-        snapshot = cStringIO.StringIO(urllib.urlopen(url).read())
-        return Image.open(snapshot)
-
-    def daynight(self, mode):
-        if mode == 'day':
-            command = 'echo 1 > /proc/gpio/icr_fbc; echo 0 > /proc/gpio/icr_enb ; sleep 2; echo 1 > /proc/gpio/icr_enb'
-        elif mode == 'night':
-            command = 'echo 0 > /proc/gpio/icr_fbc; echo 0 > /proc/gpio/icr_enb ; sleep 2; echo 1 > /proc/gpio/icr_enb'
-        self.ssh_command(command)
-
+from camera import Camera
+from util import ParsingArguments
 
 
 if __name__ == '__main__':
 
-    parser = parse_argument()
-    args = parser.parse_args()
-
-    config_file = 'grabber.ini'
-    configs = {}
-    if os.path.isfile(config_file):
-        config_parser = ConfigParser.ConfigParser()
-        config_parser.read(config_file)
-        configs['ip'] = config_parser.get('camera', 'ip')
-        configs['username'] = config_parser.get('camera', 'username')
-        configs['password'] = config_parser.get('camera', 'password')
-        configs['iteritems'] = config_parser.get('test', 'iterations')
-        configs['output'] = config_parser.get('test', 'output')
-
-    cliargs = {}
-    cliargs['ip'] = args.IP
-    cliargs['username'] = args.username
-    cliargs['password'] = args.password
-    cliargs['iterations'] = args.iterations
-    cliargs['outputdir'] = args.outputdir
-
-    final_config = configs if configs else cliargs
+    final_config = ParsingArguments()
 
     # final stuff
     creds = {}
