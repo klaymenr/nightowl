@@ -2,7 +2,16 @@
 
 # this script works for linux/mac
 
-[ -z $1 ] && echo "Need platform. $0 <linux/mac>"
+if [ -z $1 ] ; then 
+	echo "Need platform. $0 <linux/mac>"
+	exit
+fi
+
+if [ -z "$VIRTUAL_ENV" ] ; then
+	echo "Not in virtualenv"
+	exit
+fi
+
 PLAT=$1
 
 
@@ -11,3 +20,6 @@ for app in $APPS; do
 	pyinstaller -F ../$app
 	cp -a dist/$app $PLAT
 done
+
+rm -rf build dist *.spec
+
